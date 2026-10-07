@@ -1,0 +1,34 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = Model.FavoritesOnly ? "המקטעים שלי" : "תמונת מצב";
+    var fresh = Model.Readings.Where(r => Model.Roads.Any(road => road.Id == r.RoadId) && r.CollectedAtUtc >= DateTime.UtcNow.AddMinutes(-5)).ToList();
+}
+<div class="page-heading"><div><span class="eyebrow">TRAFFIC OVERVIEW</span><h1>@ViewData["Title"]</h1><p class="muted">המדידות האחרונות והגישה להיסטוריה של כל מקטע.</p></div><a class="button" asp-action="Index" asp-route-favoritesOnly="@Model.FavoritesOnly">רענון נתונים ↻</a></div>
+<div class="stats">
+    <article class="stat"><span>מקטעים בתצוגה</span><strong>@Model.Roads.Count</strong><small>מקטעים פעילים</small></article>
+    <article class="stat"><span>מקטעים עם נתון עדכני</span><strong>@fresh.Count</strong><small>איסוף בחמש הדקות האחרונות</small></article>
+    <article class="stat"><span>התרעות פתוחות</span><strong>@(Model.OpenAlerts == 200 ? "200+" : Model.OpenAlerts.ToString())</strong><small>בכל המערכת</small></article>
+</div>
+<section class="panel"><div class="section-heading"><h2>מקטעי הכביש</h2><span class="muted">קמ״ש · זמן ישראל</span></div>
+@if (Model.Roads.Count == 0)
+{
+    <div class="empty"><h3>אין מקטעים להצגה</h3><p>@(Model.FavoritesOnly ? "סמנו מקטע כמועדף בתמונת המצב." : "מנהל המערכת יכול להוסיף מקטעים דרך מסך הניהול.")</p></div>
+}
+else
+{
+    <div class="table-wrap"><table><thead><tr><th>מקטע</th><th>מהירות כעת</th><th>זרימה חופשית</th><th>מצב הנתון</th><th>נאסף</th><th>מעקב</th></tr></thead><tbody>
+    @foreach (var road in Model.Roads)
+    {
+        var reading = Model.Readings.FirstOrDefault(r => r.RoadId == road.Id);
+        bool stale = reading == null || reading.CollectedAtUtc < DateTime.UtcNow.AddMinutes(-5);
+        <tr>
+            <td><a class="road-name" asp-action="History" asp-route-id="@road.Id">@road.Name ←</a><small>@(reading?.Source == "Demo" ? "נתוני הדגמה" : reading?.Source ?? "טרם נאסף")</small></td>
+            <td class="number">@(reading?.CurrentSpeed.ToString("F0") ?? "—")</td><td>@(reading?.FreeFlowSpeed.ToString("F0") ?? "—")</td>
+            <td><span class="badge @(stale ? "warning" : reading!.RoadClosed ? "danger" : "ok")">@(stale ? "אין נתון עדכני" : reading!.RoadClosed ? "סגור" : reading.Confidence < 0.6 ? "אמינות נמוכה" : "עדכני")</span></td>
+            <td>@(reading == null ? "—" : Display.LocalTime(reading.CollectedAtUtc))</td>
+            <td><form asp-action="Favorite" method="post"><input type="hidden" name="id" value="@road.Id" /><input type="hidden" name="enabled" value="@(!Model.Favorites.Contains(road.Id))" /><button class="quiet" type="submit">@(Model.Favorites.Contains(road.Id) ? "★ הסרה" : "☆ מעקב")</button></form></td>
+        </tr>
+    }
+    </tbody></table></div>
+}
+<p class="footnote">מהירות בזרימה חופשית מתארת תנאים ללא עומס. היא אינה הממוצע ההיסטורי לאותה שעה.</p></section>

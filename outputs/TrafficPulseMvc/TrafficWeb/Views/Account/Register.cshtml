@@ -1,0 +1,11 @@
+@model RegisterViewModel
+@{ ViewData["Title"] = "הרשמה"; }
+<section class="panel auth-panel centered"><span class="eyebrow">חשבון חדש</span><h1>מצטרפים ל־TrafficPulse</h1><p class="muted">חשבונות חדשים מקבלים הרשאת משתמש רגיל.</p>
+<form asp-action="Register" method="post">
+    <div asp-validation-summary="All" class="validation" role="alert"></div>
+    <label asp-for="Name">שם מלא</label><input asp-for="Name" autocomplete="name" minlength="2" maxlength="80" required />
+    <label asp-for="Email">דואר אלקטרוני</label><input asp-for="Email" type="email" dir="ltr" autocomplete="username" required />
+    <label asp-for="Password">סיסמה — לפחות 12 תווים, אות ומספר</label><input asp-for="Password" autocomplete="new-password" minlength="12" maxlength="128" required />
+    <label asp-for="ConfirmPassword">אימות סיסמה</label><input asp-for="ConfirmPassword" autocomplete="new-password" required />
+    <button class="primary full" type="submit">יצירת חשבון</button>
+</form><p><a asp-action="Login">חזרה להתחברות</a></p></section>

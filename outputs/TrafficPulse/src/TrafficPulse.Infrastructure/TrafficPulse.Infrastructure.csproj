@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../TrafficPulse.Core/TrafficPulse.Core.csproj"/><PackageReference Include="MySqlConnector" Version="2.3.5"/><PackageReference Include="Confluent.Kafka" Version="2.15.1"/><FrameworkReference Include="Microsoft.AspNetCore.App"/><EmbeddedResource Include="Schema.sql"/></ItemGroup></Project>

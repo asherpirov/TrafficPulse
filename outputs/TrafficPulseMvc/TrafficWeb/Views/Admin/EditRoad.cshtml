@@ -1,0 +1,12 @@
+@model RoadEditViewModel
+@{ ViewData["Title"] = Model.Version == 0 ? "הוספת מקטע" : "עריכת מקטע"; }
+<div class="page-heading"><div><span class="eyebrow">הגדרות מעקב</span><h1>@ViewData["Title"]</h1></div></div>
+<section class="panel edit-panel"><form asp-action="EditRoad" method="post">
+<div asp-validation-summary="All" class="validation" role="alert"></div><input asp-for="Id" type="hidden" /><input asp-for="Version" type="hidden" />
+<label asp-for="Name">שם המקטע</label><input asp-for="Name" required maxlength="80" />
+<div class="form-grid"><div><label asp-for="Latitude">קו רוחב</label><input asp-for="Latitude" type="number" step="any" min="-90" max="90" readonly="@(Model.Version > 0)" /></div><div><label asp-for="Longitude">קו אורך</label><input asp-for="Longitude" type="number" step="any" min="-180" max="180" readonly="@(Model.Version > 0)" /></div></div>
+<p class="footnote">הספק מחזיר את המקטע הקרוב לנקודה. יש לבדוק התאמה בשילוב החי. אחרי יצירת מקטע המיקום נעול כדי לא לערבב היסטוריה של מקומות שונים.</p>
+<label asp-for="SigmaThreshold">סף חריגה בסטיות תקן (1–6)</label><input asp-for="SigmaThreshold" type="number" min="1" max="6" step="0.1" />
+<label class="checkbox"><input asp-for="IsActive" /> מקטע פעיל לאיסוף ולהצגה</label>
+<div class="actions"><button class="primary" type="submit">שמירת מקטע</button><a class="button" asp-action="Roads">ביטול</a></div>
+</form></section>

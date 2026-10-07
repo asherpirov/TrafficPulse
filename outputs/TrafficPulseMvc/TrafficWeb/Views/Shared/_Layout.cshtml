@@ -1,0 +1,50 @@
+@inject IConfiguration Configuration
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] · TrafficPulse</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<a class="skip" href="#content">דלגו לתוכן</a>
+<header class="topbar">
+    <a class="brand" asp-controller="Traffic" asp-action="Index"><span class="brand-mark">TP</span><span>TrafficPulse<small>מרכז ניטור וניתוח תנועה</small></span></a>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="account"><span>@User.Identity.Name <small>@(User.IsInRole("Admin") ? "מנהל מערכת" : "משתמש")</small></span>
+            <form asp-controller="Account" asp-action="Logout" method="post"><button class="quiet" type="submit">התנתקות</button></form>
+        </div>
+    }
+</header>
+@if (Configuration.GetValue<bool>("App:DemoMode"))
+{
+    <div class="demo-banner">מצב הדגמה מקומי · הנתונים סינתטיים · אין חיבור חי ל־TomTom, ל־Kafka או ל־MySQL</div>
+}
+<div class="shell">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="sidebar" aria-label="תפריט ראשי">
+            <span class="nav-label">סביבת העבודה</span>
+            <a asp-controller="Traffic" asp-action="Index">◉ תמונת מצב</a>
+            <a asp-controller="Traffic" asp-action="Index" asp-route-favoritesOnly="true">☆ המקטעים שלי</a>
+            <a asp-controller="Alerts" asp-action="Index">△ התרעות וחריגות</a>
+            @if (User.IsInRole("Admin"))
+            {
+                <span class="nav-label">ניהול</span>
+                <a asp-controller="Admin" asp-action="Roads">▤ מקטעי כביש</a>
+                <a asp-controller="Admin" asp-action="Users">◎ משתמשים והרשאות</a>
+            }
+            <div class="nav-note">מהירות נמוכה לא תמיד מעידה על חריגה. המערכת משווה גם ליום ולשעה דומים בעבר.</div>
+        </nav>
+    }
+    <main id="content">
+        @if (TempData["Success"] is string success) { <div class="notice success" role="status">@success</div> }
+        @if (TempData["Error"] is string error) { <div class="notice error" role="alert">@error</div> }
+        @RenderBody()
+    </main>
+</div>
+<footer>TrafficPulse · פרויקט גמר · C# / MVC / Kafka / MySQL · התצוגה מתעדכנת ברענון העמוד</footer>
+</body>
+</html>

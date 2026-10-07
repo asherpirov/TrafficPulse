@@ -1,0 +1,20 @@
+@model LoginViewModel
+@inject IConfiguration Configuration
+@{ ViewData["Title"] = "התחברות"; }
+<div class="auth-grid">
+    <section class="welcome"><span class="eyebrow">להבין את התנועה</span><h1>מה השתנה<br />בדרך שלכם?</h1><p>נתוני כביש, היסטוריה והתרעות — במקום אחד. מערכת שמציגה גם את הסיבה מאחורי החריגה.</p><div class="welcome-tags"><span>מעקב מקטעים</span><span>ניתוח היסטורי</span><span>הרשאות ניהול</span></div></section>
+    <section class="panel auth-panel"><h2>כניסה למערכת</h2><p class="muted">הזינו את פרטי החשבון כדי להמשיך.</p>
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="All" class="validation" role="alert"></div>
+            <input asp-for="ReturnUrl" type="hidden" />
+            <label asp-for="Email">דואר אלקטרוני</label><input asp-for="Email" type="email" dir="ltr" autocomplete="username" required />
+            <label asp-for="Password">סיסמה</label><input asp-for="Password" autocomplete="current-password" required />
+            <button class="primary full" type="submit">כניסה למערכת ←</button>
+        </form>
+        <p>אין לכם חשבון? <a asp-action="Register">הרשמה</a></p>
+        @if (Configuration.GetValue<bool>("App:DemoMode"))
+        {
+            <details class="demo-credentials"><summary>חשבונות ללימוד ולהדגמה בלבד</summary><p>מנהל: <bdi>admin@traffic.demo</bdi><br />משתמש: <bdi>user@traffic.demo</bdi><br />סיסמה לשניהם: <bdi>TrafficDemo2026!</bdi></p></details>
+        }
+    </section>
+</div>

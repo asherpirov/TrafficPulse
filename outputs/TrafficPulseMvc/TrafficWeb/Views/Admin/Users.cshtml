@@ -1,0 +1,11 @@
+@model List<AppUser>
+@{ ViewData["Title"] = "משתמשים והרשאות"; }
+<div class="page-heading"><div><span class="eyebrow">ניהול גישה</span><h1>משתמשים והרשאות</h1><p class="muted">השבתה מבטלת את גישת המשתמש בבקשה הבאה, גם אם הוא כבר מחובר.</p></div></div>
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>שם</th><th>דואר</th><th>תפקיד</th><th>מצב</th><th>פעולה</th></tr></thead><tbody>
+@foreach (var user in Model)
+{
+    <tr><td>@user.Name</td><td><bdi>@user.Email</bdi></td><td>@(user.Role == "Admin" ? "מנהל" : "משתמש")</td><td><span class="badge @(user.IsActive ? "ok" : "warning")">@(user.IsActive ? "פעיל" : "מושבת")</span></td><td>
+    @if (user.Role != "Admin") { <form asp-action="SetUserActive" method="post"><input type="hidden" name="id" value="@user.Id" /><input type="hidden" name="active" value="@(!user.IsActive)" /><button type="submit">@(user.IsActive ? "השבתה" : "הפעלה")</button></form> } else { <span class="muted">חשבון מוגן</span> }
+    </td></tr>
+}
+</tbody></table></div></section>

@@ -1,0 +1,18 @@
+@model AlertsViewModel
+@{ ViewData["Title"] = "התרעות וחריגות"; }
+<div class="page-heading"><div><span class="eyebrow">ANOMALY CENTER</span><h1>התרעות וחריגות</h1><p class="muted">הסבר לכל זיהוי חריגה, עם נתוני ההשוואה ההיסטורית.</p></div></div>
+<form method="get" class="panel filters"><div><label for="roadId">מקטע</label><select id="roadId" name="roadId"><option value="">כל המקטעים</option>@foreach (var road in Model.Roads) { <option value="@road.Id" selected="@(Model.RoadId == road.Id)">@road.Name</option> }</select></div>
+<div><label for="status">מצב</label><select id="status" name="status"><option value="">כל המצבים</option>@foreach (string status in new[] { "Open", "Acknowledged", "Resolved" }) { <option value="@status" selected="@(Model.Status == status)">@Display.Status(status)</option> }</select></div><button type="submit" class="primary">סינון</button></form>
+@if (Model.Alerts.Count == 0) { <section class="panel empty"><h2>אין התרעות בתצוגה זו</h2><p>ללא היסטוריה מספקת לא נוצרת התרעה סטטיסטית. דיווח על סגירת כביש נבדק בנפרד.</p></section> }
+@foreach (var alert in Model.Alerts)
+{
+    <article class="panel alert-card"><div class="section-heading"><h2>@(Model.Roads.FirstOrDefault(r => r.Id == alert.RoadId)?.Name ?? "מקטע")</h2><span class="badge @(alert.Status == "Resolved" ? "ok" : "warning")">@Display.Status(alert.Status)</span></div>
+        <p>@alert.Reason</p><div class="alert-facts"><span>זוהתה: @Display.LocalTime(alert.CreatedAtUtc)</span><span>ממוצע עבר: @(alert.HistoricalAverage?.ToString("F1") ?? "לא נדרש")</span><span>סטיית תקן: @(alert.StandardDeviation?.ToString("F1") ?? "—")</span><span>מדידות להשוואה: @alert.SampleCount</span></div>
+        @if (alert.UpdatedAtUtc.HasValue) { <p class="footnote">עודכנה לאחרונה: @Display.LocalTime(alert.UpdatedAtUtc.Value)</p> }
+        @if (User.IsInRole("Admin"))
+        {
+            <form asp-action="Update" method="post" class="inline-form"><input type="hidden" name="id" value="@alert.Id" /><input type="hidden" name="version" value="@alert.Version" /><label class="sr-only" for="status-@alert.Id">מצב התרעה</label><select name="status" id="status-@alert.Id">@foreach (string status in new[] { "Open", "Acknowledged", "Resolved" }) { <option value="@status" selected="@(alert.Status == status)">@Display.Status(status)</option> }</select><button type="submit">עדכון מצב</button></form>
+        }
+    </article>
+}
+<p class="footnote">מוצגות עד 200 התרעות אחרונות. מדידות הדגמה ומדידות אמיתיות אינן מעורבבות בחישוב.</p>

@@ -1,0 +1,30 @@
+@model HistoryViewModel
+@{ ViewData["Title"] = Model.Road.Name; }
+<div class="page-heading"><div><span class="eyebrow">היסטוריית מקטע</span><h1>@Model.Road.Name</h1><p class="muted">הזמנים מוצגים לפי ישראל. מוצגות עד 500 המדידות האחרונות בטווח.</p></div><a class="button" asp-action="Index">חזרה למקטעים</a></div>
+<form method="get" class="panel filters"><input type="hidden" name="id" value="@Model.Road.Id" />
+    <div><label for="from">מתאריך</label><input id="from" name="from" type="date" value="@Model.From.ToString("yyyy-MM-dd")" /></div>
+    <div><label for="to">עד תאריך</label><input id="to" name="to" type="date" value="@Model.To.ToString("yyyy-MM-dd")" /></div>
+    <button class="primary" type="submit">הצגת נתונים</button>
+    <div asp-validation-summary="All" class="validation" role="alert"></div>
+</form>
+@if (Model.Readings.Count == 0)
+{
+    <section class="panel empty"><h2>אין מדידות בטווח שנבחר</h2><p>נסו טווח אחר או המתינו לקבלת נתונים.</p></section>
+}
+else
+{
+    <section class="panel"><h2>מגמת מהירות — עד 30 מדידות אחרונות בטווח</h2>
+    <div class="trend" role="img" aria-label="מגמת מהירות. הנתונים המלאים בטבלה שמתחת לגרף.">
+        @foreach (var reading in Model.Readings.Take(30).Reverse())
+        {
+            int level = (int)Math.Clamp(Math.Round(reading.CurrentSpeed / 10), 0, 12);
+            <div class="bar-column"><div class="bar level-@level"></div><span>@reading.CurrentSpeed.ToString("F0")</span></div>
+        }
+    </div><p class="footnote">משמאל לימין: מוקדם למאוחר · מהירות בקמ״ש · גובה העמודות מעוגל לעשרות ומוגבל ל־120; הערכים המדויקים בטבלה.</p></section>
+    <section class="panel"><h2>מדידות</h2><div class="table-wrap"><table><thead><tr><th>זמן האיסוף</th><th>מהירות</th><th>זרימה חופשית</th><th>אמינות הספק</th><th>מקור</th><th>סגירה</th></tr></thead><tbody>
+    @foreach (var reading in Model.Readings)
+    {
+        <tr><td>@Display.LocalTime(reading.CollectedAtUtc)</td><td>@reading.CurrentSpeed.ToString("F1")</td><td>@reading.FreeFlowSpeed.ToString("F1")</td><td>@reading.Confidence.ToString("P0")</td><td>@reading.Source</td><td>@(reading.RoadClosed ? "סגור" : "לא")</td></tr>
+    }
+    </tbody></table></div></section>
+}

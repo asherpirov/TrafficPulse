@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType></PropertyGroup><ItemGroup><ProjectReference Include="../TrafficShared/TrafficShared.csproj" /><Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup></Project>
