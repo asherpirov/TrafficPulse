@@ -13,9 +13,9 @@ public class TrafficApiController : ControllerBase
     [HttpGet("roads")]
     public async Task<IActionResult> Roads() => Ok(await _repository.GetRoadsAsync());
     [HttpGet("latest")]
-    public async Task<IActionResult> Latest() => Ok((await _repository.GetLatestAsync()).Select(r => new { reading = r, stale = r.CollectedAtUtc < DateTime.UtcNow.AddMinutes(5) }));
+    public async Task<IActionResult> Latest() => Ok((await _repository.GetLatestAsync()).Select(r => new { reading = r, stale = r.CollectedAtUtc < DateTime.UtcNow.AddMinutes(-5) }));
     [HttpGet("roads/{id:guid}/history")]
-    public async Task<IActionResult> History(Guid id, DateTimeOffset from, DateTimeOffset to, int limit = 500)
+    public async Task<IActionResult> History(Guid id, [FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] DateTimeOffset from, [FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] DateTimeOffset to, int limit = 500)
     {
         if (from > to || (to - from).TotalDays > 90 || to > DateTimeOffset.UtcNow || limit is < 1 or > 500)
             return BadRequest(new { error = "טווח לא תקין: עד 90 יום ועד 500 מדידות." });

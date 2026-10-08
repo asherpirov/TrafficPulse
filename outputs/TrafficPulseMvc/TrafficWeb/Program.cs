@@ -24,6 +24,9 @@ builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(P
 builder.Services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddSingleton(builder.Configuration.GetSection("Analysis").Get<AnalysisSettings>() ?? new AnalysisSettings());
 builder.Services.AddSingleton<AnomalyService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(15) });
+builder.Services.AddSingleton(provider => new TomTomMapService(provider.GetRequiredService<HttpClient>(), Environment.GetEnvironmentVariable("TOMTOM_API_KEY") ?? ""));
 builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.Configure<PasswordHasherOptions>(options => options.IterationCount = 210000);
 
@@ -81,6 +84,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = 429;
+    options.AddPolicy("map", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+        { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("account", context => RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
         { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));

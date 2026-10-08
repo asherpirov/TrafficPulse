@@ -4,9 +4,9 @@
 
 ```mermaid
 flowchart TD
-    Provider[TomTom API] --> Producer[C# Producer]
+    Provider[TomTom API] --> Producer[C# ProducerService]
     Producer --> Kafka[Kafka traffic-readings]
-    Kafka --> Consumer[C# Consumer]
+    Kafka --> Consumer[C# ConsumerService]
     Consumer --> Validation[בדיקת מדידה]
     Validation --> Repository[TrafficRepository]
     Repository --> Analysis[AnomalyService]
@@ -66,7 +66,7 @@ sequenceDiagram
 - רשימת משתמשים מוגבלת ל־1,000, התרעות ל־200, והיסטוריה למסך/API ל־500 מדידות; אין כרגע דפדוף עמודים.
 - כל מדידה חריגה יכולה ליצור התרעה; אין עדיין איחוד סדרת מדידות לאירוע רציף אחד.
 - אין שחזור סיסמה בדואר או אימות כתובת דואר.
-- אין מפה גאוגרפית; יש רשימה, פרטים וגרף מהירות.
+- מפה סטטית של TomTom מציגה נקודת מעקב נבחרת. אין גרירה, חישוב מסלול או שרטוט גאומטריה מלאה של מקטע. תמונה דורשת מפתח TomTom בשרת.
 - ההדגמה בקובץ מיועדת לתהליך יחיד ולהיקף קטן, ואין לה מדיניות מחיקה אוטומטית.
 - ב־MySQL אין עדיין ארכוב היסטוריה מתוזמן. בפריסה ממושכת יש להגדיר מדיניות שמירה וגיבוי.
 - ה־Producer מנסה לפרסם עד שלוש פעמים; כשל ממושך לפני אישור Kafka עלול לאבד את המדידה שנאספה. הוא נרשם בלוג. לאחר אישור Kafka, השחזור מוגבל לתקופת השמירה של broker.

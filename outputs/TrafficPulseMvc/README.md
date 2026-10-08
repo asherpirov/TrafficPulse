@@ -7,6 +7,18 @@
 הממשק הוא **ASP.NET Core MVC + Razor Views + CSS**, ללא קוד JavaScript משלכם וללא Blazor.
 הגישה למסד היא **Entity Framework Core + Pomelo + TrafficDbContext + LINQ**.
 
+## מה הפרויקט עושה?
+
+עוקב אחרי נקודות בכבישים ומזהה מהירות חריגה ביחס ליום ולשעה דומים בעבר. האתר מציג מדידות, היסטוריה, מועדפים והתרעות. מנהל יכול להוסיף מקטעים, להשבית משתמשים ולעדכן טיפול בהתרעה. זו מערכת ניטור, ללא חישוב מסלולי ניווט.
+
+## איך המערכת עובדת?
+
+```text
+TomTom → ProducerService → Kafka → ConsumerService → MySQL → MVC Website
+```
+
+Producer אוסף מדידות; Consumer בודק ושומר אותן יחד עם התרעה אפשרית. האתר קורא מהמסד ומחזיר HTML באמצעות Razor. המפה היא תמונת TomTom סביב נקודה שנבחרה, דרך השרת, ללא JavaScript. בלי מפתח מוצג מצב מנותק ברור.
+
 ## להתחיל כאן
 
 1. פתחו את התיקייה הזו ב־VS Code: File → Open Folder.
@@ -64,7 +76,11 @@ TrafficShared/
   Repositories/         LINQ ו-SaveChangesAsync; מתאם הדגמה נפרד
   Services/             אלגוריתם, ולידציה וחיבור TomTom
 TrafficProducer/        קבלת נתונים ושליחתם ל-Kafka
+  Program.cs            configuration, DI והפעלה
+  Services/             IProducerService, ProducerService, ProducerSettings
 TrafficConsumer/        עיבוד הודעות ושמירה
+  Program.cs            configuration, DI והפעלה
+  Services/             IConsumerService, ConsumerService
 TrafficTests/           בדיקות אוטומטיות שאפשר לקרוא ולהריץ
 docs/                   הסבר בעברית, תרשימים ותכנון בדיקות
 scripts/                בדיקות HTTP
@@ -87,11 +103,11 @@ MySqlConnector מופיע כתלות פנימית של Pomelo, ומשמש בקו
 
 ## הפעלה עם MySQL ו־Kafka
 
-דרישות: .NET 8 SDK, Docker Desktop פעיל במצב Linux containers, והרשאה לגשת למנוע Docker.
+דרישות: Docker Desktop פעיל במצב Linux containers והרשאה לגשת למנוע Docker. לפיתוח ולבדיקות מחוץ ל־Docker התקינו גם .NET 8 SDK. פתחו ב־VS Code את `outputs/TrafficPulseMvc`, ובתוכה Terminal. הפעילו Docker Desktop והמתינו שהמנוע יהיה מוכן.
 
-1. העתיקו `.env.example` אל `.env`.
+1. העתיקו `.env.example` אל `.env` באמצעות `Copy-Item .env.example .env`.
 2. מלאו סיסמאות נפרדות עבור MySQL ומשתמש מנהל ראשוני. סיסמת מנהל חייבת לכלול 12–128 תווים, אות ומספר. כדי לשמור על פורמט connection string פשוט בחרו סיסמאות מסד ללא נקודה־פסיק.
-3. `TRAFFIC_PROVIDER=Demo` יפעיל **נתונים סינתטיים דרך Kafka ו־MySQL אמיתיים**. זה שונה ממצב ההדגמה המקומי של האתר.
+3. השאירו `TRAFFIC_PROVIDER=TomTom` ומלאו `TOMTOM_API_KEY`. לחלופין, `TRAFFIC_PROVIDER=Demo` יפעיל **נתונים סינתטיים דרך Kafka ו־MySQL אמיתיים**. זה שונה ממצב ההדגמה המקומי של האתר.
 4. הריצו:
 
 ```powershell
@@ -108,6 +124,9 @@ MySQL מפורסם רק ל־localhost:3307 ו־Kafka ל־localhost:9092. התש�
 המנהל מוגדר רק כאשר מאגר המשתמשים ריק. שינוי משתני Bootstrap לאחר מכן אינו משנה את הסיסמה הקיימת.
 עצירה ללא מחיקת נתונים: `docker compose stop`. אל תמחקו volumes אם ברצונכם לשמור את מסד הנתונים.
 
+הפעלה חוזרת: `docker compose start`. לצפייה רציפה בלוגים: `docker compose logs -f producer consumer` (יציאה עם Ctrl+C).
+רק לאיפוס מלא ומכוון: `docker compose down --volumes` מוחק את מסד הנתונים ואת נתוני Kafka; לאחר מכן `docker compose up --build -d` יוצר סביבה חדשה.
+
 ## חיבור ל־TomTom
 
 קבעו ב־`.env`:
@@ -117,7 +136,7 @@ TRAFFIC_PROVIDER=TomTom
 TOMTOM_API_KEY=<your-own-key>
 ```
 
-הפעילו מחדש את ה־Producer באמצעות `docker compose up -d producer`.
+החילו את המפתח על האתר ועל ה־Producer באמצעות `docker compose up -d web producer`.
 הקוד קורא ל־Flow Segment Data. צריך לבדוק בחשבון הספק את הכיסוי בישראל, מכסת הבקשות, עלויות והרשאות שמירת הנתונים.
 הספק מחזיר מקטע הקרוב לנקודה שנבחרה; יש לאמת שהוא המקטע והכיוון הרצויים. אין כאן חישוב מסלול מלא.
 `CollectedAtUtc` הוא זמן האיסוף אצלנו, ולא טענה שהמדידה אצל הספק בוצעה בדיוק אז.
@@ -149,7 +168,7 @@ dotnet run --project TrafficTests
 python scripts/http_checks.py http://localhost:5187
 ```
 
-בדיקות HTTP מיועדות למצב ההדגמה המקומי בלבד. הן יוצרות חשבון ומקטע זמניים בשם בדיקה ומשביתות אותם בסיום.
+בדיקות HTTP מיועדות למצב ההדגמה המקומי בלבד. הן יוצרות חשבון בדיקה ומשביתות אותו בסיום. נדרשת Python 3 רק להרצת סקריפט הבדיקות, לא להפעלת המערכת.
 הבדיקות ב־TrafficTests הן תוכנית Console עם בדיקות שנכשלות באמצעות exit code, ללא תלות במסגרת בדיקות נוספת.
 ראו `docs/VERIFICATION.md` לתוצאות בפועל ולבדיקות שלא ניתן היה לבצע בסביבה זו.
 
@@ -164,3 +183,27 @@ python scripts/http_checks.py http://localhost:5187
 7. `AnomalyService` והבדיקות שלו.
 
 קראו את `docs/LEARNING.md` יחד עם הקוד. מסמכי הפרויקט כאן הם תיעוד עבודה והסבר לקוד; הם אינם ספר הגמר בן 50 העמודים.
+
+## הקבצים החשובים שאני צריך לדעת להסביר
+
+| קובץ | תפקיד, מי קורא לו, ובמה הוא משתמש |
+|---|---|
+| TrafficProducer/Program.cs | נקודת הכניסה: קוראת הגדרות, רושמת DI ומפעילה IProducerService |
+| ProducerService.cs | Program מפעיל; קורא מקטעים דרך Repository ומדידה דרך ITrafficSource; מוציא JSON ל־Kafka |
+| TrafficConsumer/Program.cs | נקודת הכניסה: בונה ConsumerBuilder עם manual commit ורושמת שירותים |
+| ConsumerService.cs | Program מפעיל; Consume, Deserialize, Validate, Save ואז Commit; הודעה פסולה יוצאת ל־DLQ |
+| TomTomTrafficService.cs | Producer קורא; HttpClient שולח GET וממיר JSON ל־TrafficReading |
+| TrafficDbContext.cs | Repositories וכלי EF משתמשים; ממפה מחלקות לחמש טבלאות וקשרים |
+| TrafficRepository.cs | Controllers ו־Workers קוראים; LINQ לקריאה ו־SaveChangesAsync לשמירה |
+| AnomalyService.cs | Repository קורא; מקבל מדידה והיסטוריה ומחזיר התרעה או null |
+| TrafficController.cs | MVC מפעיל לפי הכתובת; קורא Repository ומחזיר ViewModel ל־View |
+| TomTomMapService.cs | MapController קורא; מחזיר תמונת מפה עם סמן במרכז; המפתח נשאר בשרת |
+| Views/Traffic/Index.cshtml | Controller מעביר מודל; Razor מייצר HTML של הדשבורד |
+| wwwroot/css/site.css | הדפדפן טוען; צבעים, מרווחים וכללי התאמה למובייל |
+| docker-compose.yml | Docker Compose קורא; מרים חמישה שירותים עם רשת ו־volumes |
+
+## איך DI מחבר את הכול?
+
+`AddScoped<ITrafficRepository, TrafficRepository>()` אומר ל־DI איזו מחלקה למסור לבנאי שמבקש את הממשק. DbContext הוא Scoped: אחד לכל בקשת אתר או יחידת עבודה. שירותי הרקע חיים לאורך התהליך ולכן יוצרים Scope קצר בכל מחזור/הודעה. HttpClient ושירות הניתוח משותפים כ־Singleton. אין Container מותאם ואין framework נוסף.
+
+תיעוד המפה: [TomTom Static Image](https://docs.tomtom.com/map-display-api/documentation/tomtom-maps/v1/raster/static-image).

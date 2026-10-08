@@ -9,6 +9,8 @@ public class DashboardViewModel
     public List<Guid> Favorites { get; set; } = [];
     public int OpenAlerts { get; set; }
     public bool FavoritesOnly { get; set; }
+    public Road? MapRoad { get; set; }
+    public bool MapConfigured { get; set; }
 }
 public class HistoryViewModel
 {

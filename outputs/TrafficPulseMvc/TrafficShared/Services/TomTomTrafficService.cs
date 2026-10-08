@@ -13,7 +13,7 @@ public class TomTomTrafficService : ITrafficSource
     {
         _httpClient = httpClient;
         _apiKey = apiKey;
-        if (string.IsNullOrWhiteSpace(apiKey)) throw new InvalidOperationException("Set Traffic__ApiKey for TomTom.");
+        if (string.IsNullOrWhiteSpace(apiKey)) throw new InvalidOperationException("Set TOMTOM_API_KEY for TomTom.");
     }
 
     public async Task<TrafficReading> GetReadingAsync(Road road, CancellationToken cancellationToken)

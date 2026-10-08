@@ -16,7 +16,7 @@ services:
       retries: 21
     restart: unless-stopped
   kafka:
-    image: confluentinc/cp-kafka:7.8.11
+    image: apache/kafka:latest
     hostname: kafka
     ports: ["127.0.0.1:9092:9092"]
     environment:
@@ -56,6 +56,7 @@ services:
       ConnectionStrings__MySql: "Server=mysql;Database=${MYSQL_DATABASE:-trafficpulse};User=${MYSQL_USER:-trafficapp};Password=${MYSQL_PASSWORD};DateTimeKind=Utc"
       Bootstrap__Email: ${BOOTSTRAP_EMAIL:?Set BOOTSTRAP_EMAIL in .env}
       Bootstrap__Password: ${BOOTSTRAP_PASSWORD:?Set BOOTSTRAP_PASSWORD in .env}
+      TOMTOM_API_KEY: ${TOMTOM_API_KEY:-}
     volumes: ["web-data:/app/.data"]
     depends_on:
       mysql: { condition: service_healthy }
@@ -73,8 +74,8 @@ services:
     environment:
       ConnectionStrings__MySql: "Server=mysql;Database=${MYSQL_DATABASE:-trafficpulse};User=${MYSQL_USER:-trafficapp};Password=${MYSQL_PASSWORD};DateTimeKind=Utc"
       Kafka__BootstrapServers: kafka:29092
-      Traffic__Provider: ${TRAFFIC_PROVIDER:-Demo}
-      Traffic__ApiKey: ${TOMTOM_API_KEY:-}
+      Traffic__Provider: ${TRAFFIC_PROVIDER:-TomTom}
+      TOMTOM_API_KEY: ${TOMTOM_API_KEY:-}
       Traffic__PollSeconds: ${POLL_SECONDS:-60}
     depends_on:
       kafka: { condition: service_healthy }

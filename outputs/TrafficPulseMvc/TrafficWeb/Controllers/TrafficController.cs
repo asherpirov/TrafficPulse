@@ -11,9 +11,14 @@ namespace TrafficWeb.Controllers;
 public class TrafficController : Controller
 {
     private readonly ITrafficRepository _repository;
-    public TrafficController(ITrafficRepository repository) { _repository = repository; }
+    private readonly TomTomMapService _mapService;
+    public TrafficController(ITrafficRepository repository, TomTomMapService mapService)
+    {
+        _repository = repository;
+        _mapService = mapService;
+    }
 
-    public async Task<IActionResult> Index(bool favoritesOnly = false)
+    public async Task<IActionResult> Index(bool favoritesOnly = false, Guid? mapRoadId = null)
     {
         var model = new DashboardViewModel
         {
@@ -24,6 +29,8 @@ public class TrafficController : Controller
             FavoritesOnly = favoritesOnly
         };
         if (favoritesOnly) model.Roads = model.Roads.Where(r => model.Favorites.Contains(r.Id)).ToList();
+        model.MapRoad = model.Roads.FirstOrDefault(r => r.Id == mapRoadId) ?? model.Roads.FirstOrDefault();
+        model.MapConfigured = _mapService.IsConfigured;
         return View(model);
     }
 
